@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ "$#" == 0 ]; then
+	echo "Usage: $0 <db_name> [backup_dir]"
+	exit 1
+fi
+
+DB=$1
+TARGET_DIR=$2
+
+if [ -z $TARGET_DIR ]; then
+	TARGET_DIR=$(pwd)
+fi
+
+if [[ $TARGET_DIR =~ [^/]$ ]]; then
+	TARGET_DIR="$TARGET_DIR/"
+fi
+
+if [ $MYSQL_USER ]; then
+	USER="-u$MYSQL_USER"
+fi
+if [ $MYSQL_PASS ]; then
+	PASSWD="-p$MYSQL_PASS"
+fi
+
+TARGET_FILE=$TARGET_DIR$(date +%Y%m%d).sql
+mysqldump $USER $PASSWD $DB > $TARGET_FILE
+echo $TARGET_FILE
