@@ -16,6 +16,9 @@ if [[ $TARGET_DIR =~ [^/]$ ]]; then
 	TARGET_DIR="$TARGET_DIR/"
 fi
 
+if [ $MYSQL_HOST ]; then
+	HOST="-h$MYSQL_HOST"
+fi
 if [ $MYSQL_USER ]; then
 	USER="-u$MYSQL_USER"
 fi
@@ -23,6 +26,6 @@ if [ $MYSQL_PASS ]; then
 	PASSWD="-p$MYSQL_PASS"
 fi
 
-TARGET_FILE=$TARGET_DIR$(date +%Y%m%d).sql
-mysqldump $USER $PASSWD $DB > $TARGET_FILE
+TARGET_FILE=$TARGET_DIR$(date +%Y%m%d).sql.gz
+mysqldump $HOST $USER $PASSWD $DB | gzip > $TARGET_FILE
 echo $TARGET_FILE
