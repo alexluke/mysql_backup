@@ -41,7 +41,7 @@ backup() {
 }
 
 cleanup() {
-	cd $BACKUP_DIR/$1 && ls -t *.$EXTENSION | awk "NR>$2" | xargs rm -f && cd - 2>& > /dev/null
+	cd $BACKUP_DIR/$1 && ls -t *$EXTENSION 2> /dev/null | awk "NR>$2" | xargs rm -f && cd - 2>&1 > /dev/null
 }
 
 main() {
@@ -58,13 +58,13 @@ main() {
 	fi
 
 	if [ $DAILY_FILES_TO_KEEP -ne 0 ]; then
-		cleanup daily
+		cleanup daily $DAILY_FILES_TO_KEEP
 	fi
 	if [ $WEEKLY_FILES_TO_KEEP -ne 0 ]; then
-		cleanup weekly
+		cleanup weekly $WEEKLY_FILES_TO_KEEP
 	fi
 	if [ $MONTHLY_FILES_TO_KEEP -ne 0 ]; then
-		cleanup monthly
+		cleanup monthly $MONTHLY_FILES_TO_KEEP
 	fi
 }
 
