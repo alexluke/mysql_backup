@@ -1,31 +1,71 @@
 #!/bin/bash
 
+WEEKLY_DAY=7
+MONTHLY_DAY=1
+DAILY_FILES_TO_KEEP=7
+WEEKLY_FILES_TO_KEEP=4
+MONTHLY_FILES_TO_KEEP=0
+EXTENSION=".sql.gz"
+
 if [ "$#" == 0 ]; then
 	echo "Usage: $0 <db_name> [backup_dir]"
 	exit 1
 fi
 
 DB=$1
-TARGET_DIR=$2
+BACKUP_DIR=$2
 
-if [ -z $TARGET_DIR ]; then
-	TARGET_DIR=$(pwd)
-fi
+setup() {
+	# Set up backup directories
+	if [ -z $BACKUP_DIR ]; then
+		BACKUP_DIR=$(pwd)
+	fi
+	mkdir -p $BACKUP_DIR/{daily,weekly,monthly}
 
-if [[ $TARGET_DIR =~ [^/]$ ]]; then
-	TARGET_DIR="$TARGET_DIR/"
-fi
+	# Set up mysql params
+	if [ $MYSQL_HOST ]; then
+		HOST="-h$MYSQL_HOST"
+	fi
+	if [ $MYSQL_USER ]; then
+		USER="-u$MYSQL_USER"
+	fi
+	if [ $MYSQL_PASS ]; then
+		PASSWD="-p$MYSQL_PASS"
+	fi
+}
 
-if [ $MYSQL_HOST ]; then
-	HOST="-h$MYSQL_HOST"
-fi
-if [ $MYSQL_USER ]; then
-	USER="-u$MYSQL_USER"
-fi
-if [ $MYSQL_PASS ]; then
-	PASSWD="-p$MYSQL_PASS"
-fi
+backup() {
+	DIR=$1
+	TARGET_FILE=$DIR/$DB_$(date +%Y%m%d)$EXTENSION
+	mysqldump $HOST $USER $PASSWD $DB | gzip > $TARGET_FILE
+}
 
-TARGET_FILE=$TARGET_DIR$(date +%Y%m%d).sql.gz
-mysqldump $HOST $USER $PASSWD $DB | gzip > $TARGET_FILE
-echo $TARGET_FILE
+cleanup() {
+	cd $BACKUP_DIR/$1 && ls -t *.$EXTENSION | awk "NR>$2" | xargs rm -f && cd - 2>& > /dev/null
+}
+
+main() {
+	setup
+
+	backup $BACKUP_DIR/daily
+
+	if [ $(date +%u) -eq $WEEKLY_DAY ]; then
+		backup $BACKUP_DIR/weekly
+	fi
+
+	if [ $(date +%d) -eq $MONTHLY_DAY ]; then
+		backup $BACKUP_DIR/monthly
+	fi
+
+	if [ $DAILY_FILES_TO_KEEP -ne 0 ]; then
+		cleanup daily
+	fi
+	if [ $WEEKLY_FILES_TO_KEEP -ne 0 ]; then
+		cleanup weekly
+	fi
+	if [ $MONTHLY_FILES_TO_KEEP -ne 0 ]; then
+		cleanup monthly
+	fi
+}
+
+main
