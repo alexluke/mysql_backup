@@ -19,7 +19,7 @@ The following environment variables can be passed to the script for connecting t
 
 * MYSQL_HOST: Host to connect to (mysql -h)
 * MYSQL_USER: Username to authenticate with (mysql -u)
-* MYSQL_PASS: PAssword to authenticate with (mysql -p)
+* MYSQL_PASS: Password to authenticate with (mysql -p)
 
 Example:
 
